@@ -22,6 +22,8 @@ type bookBoundary struct {
 	start, end int
 }
 
+var translations = []string{"RSVCE", "RSV", "ESV", "NABRE"}
+
 var books = map[string]struct{}{
 	"Genesis":              struct{}{},
 	"Exodus":               struct{}{},
@@ -233,17 +235,19 @@ func generateDescription(readings []*reading) string {
 		s.WriteString(" ")
 		s.WriteString(strings.Join(reading.passages, ", "))
 	}
-	s.WriteRune('\n')
-	s.WriteString(" <br><br>")
-	s.WriteString(fmt.Sprintf(`<a href="%s">Bible Gateway</a>`, generateBibleGatewayLink(readings)))
+	for _, translation := range translations {
+		s.WriteRune('\n')
+		s.WriteString(" <br><br>")
+		s.WriteString(fmt.Sprintf(`<a href="%s">%s</a>`, generateBibleGatewayLink(readings, translation), translation))
+	}
 	return s.String()
 }
 
-func generateBibleGatewayLink(readings []*reading) string {
+func generateBibleGatewayLink(readings []*reading, translation string) string {
 	bglink := `https://
  www.biblegateway.com/passage/?search=
  %s
- &version=ESV`
+ &version=%s`
 	var s strings.Builder
 	for i, reading := range readings {
 		if i > 0 {
@@ -253,7 +257,7 @@ func generateBibleGatewayLink(readings []*reading) string {
 		s.WriteString("+")
 		s.WriteString(url.PathEscape(strings.Join(reading.passages, ", ")))
 	}
-	return fmt.Sprintf(bglink, s.String())
+	return fmt.Sprintf(bglink, s.String(), translation)
 }
 
 func convertToReadings(raw []string) (readings []*reading) {
